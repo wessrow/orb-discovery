@@ -58,7 +58,7 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
     platform = device_info.get("platform")
     description = None
     comments = None
-    location = None
+    location = device_info.get("location")
 
     if defaults.device:
         tags.extend(defaults.device.tags or [])
@@ -294,6 +294,10 @@ def translate_data(data: dict) -> Iterable[Entity]:
     options = data.get("options") or Options()
 
     device_info = data.get("device", {})
+
+    # Insert location data.
+    defaults.location = data["location"]
+
     interfaces = data.get("interface", {})
     interfaces_ip = data.get("interface_ip", {})
     if device_info:
