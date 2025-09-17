@@ -180,7 +180,8 @@ class PolicyRunner:
                 "interface_ip": device.get_interfaces_ip(),
                 "defaults": config.defaults,
                 "options": config.options,
-                "location": device.get_snmp_information()["location"]
+                "location": device.get_snmp_information()["location"],
+                "primary_ip4": scope.hostname
             }
             try:
                 data["vlan"] = device.get_vlans()

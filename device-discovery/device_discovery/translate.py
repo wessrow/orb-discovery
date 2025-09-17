@@ -84,6 +84,7 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
         tenant=defaults.tenant,
         description=description,
         comments=comments,
+        primary_ip4=device_info.get("primary_ip4")
     )
     return device
 
@@ -300,6 +301,13 @@ def translate_data(data: dict) -> Iterable[Entity]:
 
     interfaces = data.get("interface", {})
     interfaces_ip = data.get("interface_ip", {})
+
+    # Set primary IP with correct mask from interface-IPs.
+    for _,v in interfaces_ip.items():
+        for ip, ip_data in v["ipv4"].items():
+            if ip == data["primary_ip4"]:
+                device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
+
     if device_info:
         if options.platform_omit_version:
             device_info["platform"] = data.get("driver")
