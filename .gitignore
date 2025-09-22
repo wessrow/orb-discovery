@@ -6,6 +6,10 @@ __pycache__/
 *.egg-info/
 .coverage/
 .coverage
+venv
+.env
+test-policy.yaml
+run.sh
 
 .cursor/
 .cursor.md
