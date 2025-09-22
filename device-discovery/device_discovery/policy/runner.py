@@ -86,7 +86,7 @@ class PolicyRunner:
                 id=id,
                 trigger=trigger,
                 args=[id, scope, config],
-                misfire_grace_time=None,
+                misfire_grace_time=60,
             )
             if set_telemetry:
                 set_telemetry = False
