@@ -81,7 +81,7 @@ class PolicyRunner:
                 config.defaults = config.defaults.model_copy(
                     update=scope.override_defaults.model_dump(exclude_none=True)
                 )
-            test =self.scheduler.add_job(
+            test = self.scheduler.add_job(
                 self.run,
                 id=id,
                 trigger=trigger,
