@@ -31,7 +31,7 @@ class PolicyRunner:
         self.scopes = dict[str, Napalm]()
         self.config = None
         self.status = Status.NEW
-        self.scheduler = BackgroundScheduler()
+        self.scheduler = BackgroundScheduler(job_defaults={"misfire_grace_time": None})
 
     def setup(self, name: str, config: Config, scopes: list[Napalm]):
         """
@@ -86,7 +86,7 @@ class PolicyRunner:
                 id=id,
                 trigger=trigger,
                 args=[id, scope, config],
-                misfire_grace_time=60,
+                misfire_grace_time=None,
             )
             if set_telemetry:
                 set_telemetry = False
