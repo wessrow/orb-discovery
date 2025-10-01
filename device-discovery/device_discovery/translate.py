@@ -304,9 +304,12 @@ def translate_data(data: dict) -> Iterable[Entity]:
 
     # Set primary IP with correct mask from interface-IPs.
     for _,v in interfaces_ip.items():
-        for ip, ip_data in v["ipv4"].items():
-            if ip == data["primary_ip4"]:
-                device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
+        try:
+            for ip, ip_data in v["ipv4"].items():
+                if ip == data["primary_ip4"]:
+                    device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
+        except KeyError:
+            continue
 
     if device_info:
         if options.platform_omit_version:

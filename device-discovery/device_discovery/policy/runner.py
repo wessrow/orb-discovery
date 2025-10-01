@@ -174,6 +174,14 @@ class PolicyRunner:
                     },
                 )
 
+            try:
+                location = device.get_snmp_information()["location"]
+            except Exception as e:
+                logger.error(
+                    f"Policy {self.name}, Hostname {sanitized_hostname}: Error getting SNMP location: {e}"
+                )
+                location = None
+
             data = {
                 "driver": scope.driver,
                 "device": device.get_facts(),
@@ -181,7 +189,7 @@ class PolicyRunner:
                 "interface_ip": device.get_interfaces_ip(),
                 "defaults": config.defaults,
                 "options": config.options,
-                "location": device.get_snmp_information()["location"],
+                "location": location,
                 "primary_ip4": scope.hostname
             }
             try:
