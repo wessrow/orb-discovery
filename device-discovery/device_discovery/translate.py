@@ -12,10 +12,8 @@ from netboxlabs.diode.sdk.ingester import (
     Entity,
     Interface,
     IPAddress,
-    Location,
     Platform,
-    Prefix,
-    Role
+    Prefix
 )
 
 from device_discovery.policy.models import Defaults, Options
