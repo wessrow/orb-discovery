@@ -81,14 +81,13 @@ class PolicyRunner:
                 config.defaults = config.defaults.model_copy(
                     update=scope.override_defaults.model_dump(exclude_none=True)
                 )
-            test = self.scheduler.add_job(
+            self.scheduler.add_job(
                 self.run,
                 id=id,
                 trigger=trigger,
                 args=[id, scope, config],
                 misfire_grace_time=None,
             )
-            logger.info(test.misfire_grace_time)
             if set_telemetry:
                 set_telemetry = False
                 self.scheduler.add_job(
@@ -137,7 +136,7 @@ class PolicyRunner:
 
     def _collect_device_data(
         self, scope: Napalm, sanitized_hostname: str, config: Config
-    ):
+    ): 
         """
         Connect to device and collect data.
 
@@ -190,7 +189,8 @@ class PolicyRunner:
                 "defaults": config.defaults,
                 "options": config.options,
                 "location": location,
-                "primary_ip4": scope.hostname
+                "primary_ip4": scope.hostname,
+                "role": "test"
             }
             try:
                 data["vlan"] = device.get_vlans()
@@ -237,7 +237,7 @@ class PolicyRunner:
                 discovery_attempts.add(1, {"policy": self.name})
 
             # Collect data from device
-            self._collect_device_data(scope, sanitized_hostname, config)
+            discovery_success = self._collect_device_data(scope, sanitized_hostname, config)
 
             # Record total discovery duration
             discovery_latency = get_metric("discovery_latency")
