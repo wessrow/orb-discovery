@@ -5,6 +5,7 @@
 import logging
 import time
 import uuid
+import re
 from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -189,9 +190,15 @@ class PolicyRunner:
                 "defaults": config.defaults,
                 "options": config.options,
                 "location": location,
-                "primary_ip4": scope.hostname,
-                "role": "test"
+                "primary_ip4": scope.hostname
             }
+            ### VGR SPECIFIC ROLE MATCHING!
+            device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)", data["device"]["hostname"])
+            if "s" in device_type.group(1):
+                data["role"] = "access"
+            if "r" in device_type.group(1):
+                data["role"] = "router"
+
             try:
                 data["vlan"] = device.get_vlans()
             except Exception as e:

@@ -68,7 +68,7 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
         manufacturer = defaults.device.manufacturer or manufacturer
         platform = defaults.device.platform or platform
 
-    if defaults.role:
+    if defaults.role != "undefined":
         role = defaults.role or role
     if defaults.location:
         location = defaults.location or location
