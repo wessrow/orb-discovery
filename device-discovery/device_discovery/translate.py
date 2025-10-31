@@ -15,6 +15,7 @@ from netboxlabs.diode.sdk.ingester import (
     Location,
     Platform,
     Prefix,
+    Role
 )
 
 from device_discovery.policy.models import Defaults, Options
@@ -59,6 +60,7 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
     description = None
     comments = None
     location = device_info.get("location")
+    role = device_info.get("role")
 
     if defaults.device:
         tags.extend(defaults.device.tags or [])
@@ -68,14 +70,16 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
         manufacturer = defaults.device.manufacturer or manufacturer
         platform = defaults.device.platform or platform
 
+    if defaults.role:
+        role = defaults.role or role
     if defaults.location:
-        location = Location(name=defaults.location, site=defaults.site)
+        location = defaults.location or location
 
     device = Device(
         name=device_info.get("hostname"),
         device_type=DeviceType(model=model, manufacturer=manufacturer),
         platform=Platform(name=platform, manufacturer=manufacturer),
-        role=defaults.role,
+        role=role,
         serial=device_info.get("serial_number"),
         status="active",
         site=defaults.site,
@@ -293,11 +297,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
 
     defaults = data.get("defaults") or Defaults()
     options = data.get("options") or Options()
-
     device_info = data.get("device", {})
-
-    # Insert location data.
-    defaults.location = data["location"]
 
     interfaces = data.get("interface", {})
     interfaces_ip = data.get("interface_ip", {})
@@ -306,7 +306,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
     for _,v in interfaces_ip.items():
         try:
             for ip, ip_data in v["ipv4"].items():
-                if ip == data["primary_ip4"]:
+                if ip == data.get("primary_ip4"):
                     device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
         except KeyError:
             continue
@@ -318,6 +318,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
             device_info["platform"] = (
                 f"{data.get('driver', '').upper()} {device_info.get('os_version')}"
             )
+        device_info.update({"location": data.get("location"), "role": data.get("role")})
         device = translate_device(device_info, defaults)
         entities.append(Entity(device=device))
 
