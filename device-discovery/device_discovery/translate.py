@@ -10,6 +10,7 @@ from netboxlabs.diode.sdk.ingester import (
     Device,
     DeviceType,
     Entity,
+    Location,
     Interface,
     IPAddress,
     Platform,
@@ -70,8 +71,9 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
 
     if defaults.role != "undefined":
         role = defaults.role or role
-    if defaults.location:
+    if defaults.location or location:
         location = defaults.location or location
+        location = Location(name=location, site=defaults.site)
 
     device = Device(
         name=device_info.get("hostname"),

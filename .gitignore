@@ -9,7 +9,6 @@ __pycache__/
 venv
 .env
 test-policy.yaml
-run.sh
 
 .cursor/
 .cursor.md

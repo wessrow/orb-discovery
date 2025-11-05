@@ -176,6 +176,8 @@ class PolicyRunner:
 
             try:
                 location = device.get_snmp_information()["location"]
+                if len(location) == 0:
+                    location = None
             except Exception as e:
                 logger.error(
                     f"Policy {self.name}, Hostname {sanitized_hostname}: Error getting SNMP location: {e}"
