@@ -183,7 +183,6 @@ class PolicyRunner:
                     f"Policy {self.name}, Hostname {sanitized_hostname}: Error getting SNMP location: {e}"
                 )
                 location = None
-
             data = {
                 "driver": scope.driver,
                 "device": device.get_facts(),
