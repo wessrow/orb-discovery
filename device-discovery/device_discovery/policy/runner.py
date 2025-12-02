@@ -195,14 +195,16 @@ class PolicyRunner:
             }
             ### VGR SPECIFIC ROLE MATCHING!
             device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)-?([aA-zZ0-9]+)?", data["device"]["hostname"])
-            search_group = 1
-            if device_type.group(2):
-                search_group = 2
-            data["role"] = "unknown"
-            if "s" in device_type.group(search_group):
-                data["role"] = "access"
-            if "r" in device_type.group(search_group):
-                data["role"] = "router"
+            if device_type is None:
+                data["role"] = "unknown"
+            else:
+              search_group = 1
+              if device_type.group(2):
+                  search_group = 2
+              if "s" in device_type.group(search_group):
+                  data["role"] = "access"
+              if "r" in device_type.group(search_group):
+                  data["role"] = "router"
 
             try:
                 data["vlan"] = device.get_vlans()
