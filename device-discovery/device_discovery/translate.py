@@ -316,7 +316,6 @@ def translate_data(data: dict) -> Iterable[Entity]:
             )
         device_info.update({"location": data.get("location"), "role": data.get("role")})
         device = translate_device(device_info, defaults)
-        entities.append(Entity(device=device))
 
         for if_name, interface_info in interfaces.items():
             interface = translate_interface(device, if_name, interface_info, defaults)
@@ -333,6 +332,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
                 continue
 
         device = translate_device(device_info, defaults)
+        entities.append(Entity(device=device))
 
     if data.get("vlan"):
         for vid, vlan_info in data.get("vlan").items():
