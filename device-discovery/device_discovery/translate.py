@@ -332,6 +332,8 @@ def translate_data(data: dict) -> Iterable[Entity]:
         except KeyError:
             continue
 
+    device = translate_device(device_info, defaults)
+
     if data.get("vlan"):
         for vid, vlan_info in data.get("vlan").items():
             vlan = translate_vlan(vid, vlan_info.get("name"), defaults)
