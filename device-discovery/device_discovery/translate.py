@@ -304,15 +304,6 @@ def translate_data(data: dict) -> Iterable[Entity]:
     interfaces = data.get("interface", {})
     interfaces_ip = data.get("interface_ip", {})
 
-    # Set primary IP with correct mask from interface-IPs.
-    for _,v in interfaces_ip.items():
-        try:
-            for ip, ip_data in v["ipv4"].items():
-                if ip == data.get("primary_ip4"):
-                    device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
-        except KeyError:
-            continue
-
     if device_info:
         if options.platform_omit_version:
             device_info["platform"] = data.get("driver")
@@ -328,6 +319,15 @@ def translate_data(data: dict) -> Iterable[Entity]:
             interface = translate_interface(device, if_name, interface_info, defaults)
             entities.append(Entity(interface=interface))
             entities.extend(translate_interface_ips(interface, interfaces_ip, defaults))
+
+    # Set primary IP with correct mask from interface-IPs.
+    for _,v in interfaces_ip.items():
+        try:
+            for ip, ip_data in v["ipv4"].items():
+                if ip == data.get("primary_ip4"):
+                    device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
+        except KeyError:
+            continue
 
     if data.get("vlan"):
         for vid, vlan_info in data.get("vlan").items():
