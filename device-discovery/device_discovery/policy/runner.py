@@ -194,11 +194,14 @@ class PolicyRunner:
                 "primary_ip4": scope.hostname
             }
             ### VGR SPECIFIC ROLE MATCHING!
-            device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)", data["device"]["hostname"])
+            device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)-?([aA-zZ0-9]+)?", data["device"]["hostname"])
+            search_group = 1
+            if device_type.group(2):
+                search_group = 2
             data["role"] = "unknown"
-            if "s" in device_type.group(1):
+            if "s" in device_type.group(search_group):
                 data["role"] = "access"
-            if "r" in device_type.group(1):
+            if "r" in device_type.group(search_group):
                 data["role"] = "router"
 
             try:
