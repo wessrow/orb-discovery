@@ -75,8 +75,10 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
         location = defaults.location or location
         location = Location(name=location, site=defaults.site)
 
+    hostname = f"{device_info.get('hostname')}.net.vgregion.se"
+
     device = Device(
-        name=device_info.get("hostname"),
+        name=hostname,
         device_type=DeviceType(model=model, manufacturer=manufacturer),
         platform=Platform(name=platform, manufacturer=manufacturer),
         role=role,
