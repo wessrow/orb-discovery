@@ -323,16 +323,16 @@ def translate_data(data: dict) -> Iterable[Entity]:
             entities.append(Entity(interface=interface))
             entities.extend(translate_interface_ips(interface, interfaces_ip, defaults))
 
-    # Set primary IP with correct mask from interface-IPs.
-    for _,v in interfaces_ip.items():
-        try:
-            for ip, ip_data in v["ipv4"].items():
-                if ip == data.get("primary_ip4"):
-                    device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
-        except KeyError:
-            continue
+        # Set primary IP with correct mask from interface-IPs.
+        for _,v in interfaces_ip.items():
+            try:
+                for ip, ip_data in v["ipv4"].items():
+                    if ip == data.get("primary_ip4"):
+                        device_info.update({"primary_ip4": f"{ip}/{ip_data['prefix_length']}"})
+            except KeyError:
+                continue
 
-    device = translate_device(device_info, defaults)
+        device = translate_device(device_info, defaults)
 
     if data.get("vlan"):
         for vid, vlan_info in data.get("vlan").items():
