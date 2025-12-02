@@ -195,6 +195,7 @@ class PolicyRunner:
             }
             ### VGR SPECIFIC ROLE MATCHING!
             device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)", data["device"]["hostname"])
+            data["role"] = "unknown"
             if "s" in device_type.group(1):
                 data["role"] = "access"
             if "r" in device_type.group(1):
