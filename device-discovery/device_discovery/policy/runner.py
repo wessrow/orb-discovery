@@ -33,8 +33,12 @@ class PolicyRunner:
         self.config = None
         self.status = Status.NEW
         self.scheduler = BackgroundScheduler()
+        self.is_one_time = False
+        self.total_jobs = 0
+        self.completed_jobs = 0
+        self.on_completion_callback = None
 
-    def setup(self, name: str, config: Config, scopes: list[Napalm]):
+    def setup(self, name: str, config: Config, scopes: list[Napalm], on_completion_callback=None):
         """
         Set up the policy runner.
 
@@ -43,14 +47,21 @@ class PolicyRunner:
             name: Policy name.
             config: Configuration data containing site information.
             scopes: scope data for the devices.
+            on_completion_callback: Optional callback to invoke when all one-time jobs complete.
 
         """
         self.name = name.replace("\r\n", "").replace("\n", "")
         self.config = config
+        self.on_completion_callback = on_completion_callback
 
         self.config = self.config or Config(defaults=Defaults(), options=Options())
         self.config.defaults = self.config.defaults or Defaults()
         self.config.options = self.config.options or Options()
+
+        # Determine if this is a one-time policy (no schedule)
+        self.is_one_time = self.config.schedule is None
+        self.total_jobs = len(scopes) if self.is_one_time else 0
+        self.completed_jobs = 0
 
         self.scheduler.start()
         set_telemetry = True
@@ -239,6 +250,7 @@ class PolicyRunner:
                 logger.error(
                     f"Policy {self.name}, Hostname {sanitized_hostname}: Error removing job: {e}"
                 )
+            self._mark_job_completed()
             return
 
         logger.info(
@@ -285,6 +297,34 @@ class PolicyRunner:
                         "status": "failed",
                     },
                 )
+        finally:
+            # Track completion for one-time jobs
+            self._mark_job_completed()
+
+    def _mark_job_completed(self):
+        """Mark a job as completed and check if all one-time jobs are done."""
+        if not self.is_one_time:
+            return
+        
+        self.completed_jobs += 1
+        logger.info(f"Policy {self.name}: Job completed ({self.completed_jobs}/{self.total_jobs})")
+        
+        if self.completed_jobs >= self.total_jobs:
+            logger.info(f"Policy {self.name}: All one-time jobs completed")
+            self.status = Status.FINISHED
+            if self.on_completion_callback:
+                self.on_completion_callback(self.name)
+
+    def is_completed(self) -> bool:
+        """
+        Check if this policy runner has completed all its one-time jobs.
+        
+        Returns
+        -------
+            bool: True if this is a one-time policy and all jobs are complete, False otherwise.
+        
+        """
+        return self.is_one_time and self.completed_jobs >= self.total_jobs
 
     def stop(self):
         """Stop the policy runner."""

@@ -43,6 +43,43 @@ class PolicyManager:
     def __init__(self):
         """Initialize the PolicyManager instance with an empty list of policies."""
         self.runners = dict[str, PolicyRunner]()
+        self.exit_on_completion = False
+        self.on_all_completed_callback = None
+
+    def set_exit_on_completion(self, callback):
+        """
+        Enable exit-on-completion mode.
+        
+        Args:
+        ----
+            callback: Function to call when all one-time policies are completed.
+        
+        """
+        self.exit_on_completion = True
+        self.on_all_completed_callback = callback
+
+    def _on_policy_completed(self, policy_name: str):
+        """
+        Called when a policy completes all its one-time jobs.
+        
+        Args:
+        ----
+            policy_name: Name of the completed policy.
+        
+        """
+        if not self.exit_on_completion:
+            return
+        
+        # Check if all one-time policies are completed
+        all_completed = all(
+            runner.is_completed() or not runner.is_one_time 
+            for runner in self.runners.values()
+        )
+        
+        if all_completed:
+            logger.info("All one-time policies completed")
+            if self.on_all_completed_callback:
+                self.on_all_completed_callback()
 
     def start_policy(self, name: str, policy: Policy):
         """
@@ -58,7 +95,8 @@ class PolicyManager:
             raise ValueError(f"policy '{name}' already exists")
 
         runner = PolicyRunner()
-        runner.setup(name, policy.config, policy.scope)
+        callback = self._on_policy_completed if self.exit_on_completion else None
+        runner.setup(name, policy.config, policy.scope, on_completion_callback=callback)
         self.runners[name] = runner
 
     def parse_policy(self, config_data: bytes) -> PolicyRequest:

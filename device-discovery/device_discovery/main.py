@@ -107,6 +107,13 @@ def main():
     )
 
     parser.add_argument(
+        "--exit-on-completion",
+        help="Exit with code 0 when all one-time policies complete (useful for container orchestration)",
+        action="store_true",
+        required=False,
+    )
+
+    parser.add_argument(
         "-o",
         "--dry-run-output-dir",
         help="Output dir for dry-run mode. Environment variable can be used by wrapping it in ${} (e.g. ${OUTPUT_DIR})",
@@ -174,11 +181,46 @@ def main():
             dry_run_output_dir=output_dir,
         )
 
-        uvicorn.run(
-            app,
-            host=args.host,
-            port=args.port,
-        )
+        # Set exit-on-completion mode if requested
+        if args.exit_on_completion:
+            from device_discovery.server import manager
+            import threading
+            
+            exit_event = threading.Event()
+            
+            def on_all_completed():
+                """Callback to trigger application exit."""
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info("All policies completed. Exiting application...")
+                exit_event.set()
+            
+            manager.set_exit_on_completion(on_all_completed)
+            
+            # Start server in a separate thread when using exit-on-completion
+            server_thread = threading.Thread(
+                target=uvicorn.run,
+                kwargs={
+                    "app": app,
+                    "host": args.host,
+                    "port": args.port,
+                },
+                daemon=True
+            )
+            server_thread.start()
+            
+            # Wait for all policies to complete
+            exit_event.wait()
+            
+            # Clean shutdown
+            manager.stop()
+            sys.exit(0)
+        else:
+            uvicorn.run(
+                app,
+                host=args.host,
+                port=args.port,
+            )
     except (KeyboardInterrupt, RuntimeError):
         pass
     except Exception as e:

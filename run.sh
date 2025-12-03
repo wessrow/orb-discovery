@@ -1,1 +1,1 @@
-device-discovery -t 'grpc://'$DIODE_HOST'/diode' -c $DIODE_CLIENT_ID -k $DIODE_CLIENT_SECRET
+device-discovery -t 'grpc://'$DIODE_HOST'/diode' -c $DIODE_CLIENT_ID -k $DIODE_CLIENT_SECRET --exit-on-completion
