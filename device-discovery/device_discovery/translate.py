@@ -309,11 +309,14 @@ def translate_data(data: dict) -> Iterable[Entity]:
         if options.platform_omit_version:
             device_info["platform"] = data.get("driver")
         else:
-            version_capture_regex = r"(?:Version |JUNOS )([\d\.]+(?:\([^)]+\))?[A-Za-z0-9\-.]*)"
-            parsed__version = re.search(version_capture_regex, device_info.get('os_version'))
-            device_info["platform"] = (
-                f"{data.get('driver', '').upper()} {parsed__version.group(1)}"
-            )
+            try:
+                version_capture_regex = r"(?:Version |JUNOS )([\d\.]+(?:\([^)]+\))?[A-Za-z0-9\-.]*)"
+                parsed__version = re.search(version_capture_regex, device_info.get('os_version'))
+                device_info["platform"] = (
+                    f"{data.get('driver', '').upper()} {parsed__version.group(1)}"
+                )
+            except AttributeError:
+                device_info["platform"] = data.get("driver")
         device_info.update({"location": data.get("location"), "role": data.get("role")})
         device = translate_device(device_info, defaults)
 
