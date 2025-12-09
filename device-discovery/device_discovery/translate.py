@@ -316,7 +316,9 @@ def translate_data(data: dict) -> Iterable[Entity]:
                     f"{data.get('driver', '').upper()} {parsed__version.group(1)}"
                 )
             except AttributeError:
-                device_info["platform"] = data.get("driver")
+                device_info["platform"]= (
+                    f"{data.get('driver', '').upper()} {device_info.get('os_version')}"
+                )
         device_info.update({"location": data.get("location"), "role": data.get("role")})
         device = translate_device(device_info, defaults)
 
