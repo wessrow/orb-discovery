@@ -205,17 +205,22 @@ class PolicyRunner:
                 "primary_ip4": scope.hostname
             }
             ### VGR SPECIFIC ROLE MATCHING!
-            device_type = re.search(r"[aA-zZ0-9]+-[aA-zZ0-9]+-([aA-zZ0-9]+)-?([aA-zZ0-9]+)?", data["device"]["hostname"])
-            if device_type is None:
+            hostname = data["device"]["hostname"]
+            # Use a correct character class: [A-Za-z0-9]
+            m = re.search(r"[A-Za-z0-9]+-[A-Za-z0-9]+-([A-Za-z0-9]+)(?:-([A-Za-z0-9]+))?(?:-([A-Za-z0-9]+))?", hostname)
+
+            if not m:
                 data["role"] = "unknown"
             else:
-              search_group = 1
-              if device_type.group(2):
-                  search_group = 2
-              if "s" in device_type.group(search_group):
-                  data["role"] = "access"
-              if "r" in device_type.group(search_group):
-                  data["role"] = "router"
+                # Pick the last non-None group
+                part = next(g for g in reversed(m.groups()) if g)
+
+                if "s" in part.lower():
+                    data["role"] = "access"
+                elif "r" in part.lower() or "pe" in part.lower():
+                    data["role"] = "router"
+                else:
+                    data["role"] = "unknown"
 
             try:
                 data["vlan"] = device.get_vlans()
