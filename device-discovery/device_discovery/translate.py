@@ -97,7 +97,7 @@ def translate_device(device_info: dict, defaults: Defaults) -> Device:
 
 
 def translate_interface(
-    device: Device, if_name: str, interface_info: dict, defaults: Defaults
+    device: Device, if_name: str, interface_info: dict, vlans: dict, defaults: Defaults
 ) -> Interface:
     """
     Translate interface information from NAPALM format to Diode SDK Interface entity.
@@ -128,12 +128,34 @@ def translate_interface(
         else None
     )
 
+    vlan_counter = 0
+    intf_vlans = []
+    for vid, vlan in vlans.items():
+        for interface in vlan.get("interfaces", []):
+            if interface == if_name:
+                intf_vlans.append(int(vid))
+                vlan_counter += 1
+
+    mode = None
+    untagged_vlan = None
+    tagged_vlans = []
+    if len(intf_vlans) == 1:
+        mode = "access"
+        untagged_vlan = VLAN(vid=intf_vlans[0])
+    if len(intf_vlans) > 1:
+        mode = "tagged"
+        untagged_vlan = VLAN(vid=intf_vlans[0])
+        tagged_vlans = [VLAN(vid=vid) for vid in intf_vlans[1:]]
+
     interface = Interface(
         device=device,
         name=if_name,
         enabled=interface_info.get("is_enabled"),
         primary_mac_address=mac_address,
         description=description,
+        mode=mode,
+        tagged_vlans=tagged_vlans,
+        untagged_vlan=untagged_vlan,
         tags=tags,
         type=defaults.if_type,
     )
@@ -305,6 +327,8 @@ def translate_data(data: dict) -> Iterable[Entity]:
     interfaces = data.get("interface", {})
     interfaces_ip = data.get("interface_ip", {})
 
+    vlans = data.get("vlan", {})
+
     if device_info:
         if options.platform_omit_version:
             device_info["platform"] = data.get("driver")
@@ -323,7 +347,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
         device = translate_device(device_info, defaults)
 
         for if_name, interface_info in interfaces.items():
-            interface = translate_interface(device, if_name, interface_info, defaults)
+            interface = translate_interface(device, if_name, interface_info, vlans, defaults)
             entities.append(Entity(interface=interface))
             entities.extend(translate_interface_ips(interface, interfaces_ip, defaults))
 
@@ -338,8 +362,7 @@ def translate_data(data: dict) -> Iterable[Entity]:
 
         device = translate_device(device_info, defaults)
         entities.append(Entity(device=device))
-
-    if data.get("vlan"):
+    if vlans:
         for vid, vlan_info in data.get("vlan").items():
             vlan = translate_vlan(vid, vlan_info.get("name"), defaults)
             if vlan:
